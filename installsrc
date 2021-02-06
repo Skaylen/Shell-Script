@@ -14,7 +14,7 @@
 #
 # Descrição do programa:
 #
-# O programa installsrc é um instalar de código fonte.
+# O programa installsrc é um instalador de código fonte.
 # O programa tem os processos de instalação e desinstalação.
 # 
 # Arquivos de registros:
@@ -63,7 +63,7 @@ MENSAGEM_USO="
 Uso: $(basename "$0") [OPÇÕES]
 
 DESCRIÇÃO:
-	Instala e gerência os programas instalado pelo código fonte.
+	Instala e gerência os programas instalados pelo código fonte.
 
 Argumentos:
 	-i <nome.ext> <caminho>  Instala o programa.
@@ -98,7 +98,7 @@ arq_caminho="		     ###################
 #
 # DESCRIÇÃO:
 #	Arquivo para registro dos caminhos dos programas
-# 	instalados. Utilizado para a desinstalação e outros
+# 	instalados. Utilizado para a desinstalação e outras
 # 	funcionalidades do installsrc.
 #
 #
@@ -116,7 +116,7 @@ arq_programas="		     ###################
 #
 # DESCRIÇÃO:
 #	Arquivo para registro dos nomes dos programas
-# 	instalados. Utilizado para a desinstalação e outros
+# 	instalados. Utilizado para a desinstalação e outras
 # 	funcionalidades do installsrc.
 #
 #
