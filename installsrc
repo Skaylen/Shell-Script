@@ -1,0 +1,501 @@
+#!/bin/bash
+#
+# NOTA: !!!!!! EXECUTAR O CÓDIGO LOGADO COMO ROOT !!!!!!!
+#
+# Baseado no programa source_code_installer_gamma.2.0
+# 
+# Nome: installsrc 
+# 
+# Informação:
+#
+# AUTOR: Mac Brener
+# NICK:  Skaylen Viva-o-linux
+# LOCAL: /home/mac/script
+#
+# Descrição do programa:
+#
+# O programa installsrc é um instalar de código fonte.
+# O programa tem os processos de instalação e desinstalação.
+# 
+# Arquivos de registros:
+# 
+# 1) progamas.log: 
+# ==> Arquivo para o registro dos nomes dos programas instalados.
+#
+# 2) caminho.log:
+# ==> Arquivo que armazena o caminho do diretório do programa instalado.
+#     Este documento é usado para a desinstaladão.
+#
+# Versão 1.0: 
+#
+# Sistemas testados:
+# 
+# Debian 10
+# Slackware 14.2
+#
+# 		              <Modificações>
+# 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Modificação 01: Copiei as principais funções do programa source_code_installer_gamma.2.0.
+# Modificação 02: Redução de comandos.
+# Modificação 03: Redução de variáveis.
+# Modificação 04: Renomeação dos arquivos de registros.
+# Modificação 05: Colando case para as opções na linha de comando.
+# Modificação 06: Criação de novas variáveis.
+# Modificação 07: Aperfeiçoamentos nos arquivos de registros, com mais detalhes.
+# Modificação 08: Simplificação da função extrair.
+# Modificação 09: Criação de pastas para o programa.
+# Modificação 10: Melhorando as opções em caso de erro.
+# Modificação 11: Comentários: Detalhes, erros e possíveis soluções.
+# Modificação 12: Original: 821 linhas |\| Atual: 496 linhas
+#
+
+# DECLARAÇÃO: Variáveis Locais.
+
+
+local="$3"
+
+arquivo="$2"
+
+PFONTE="/home/.programasrc/fontes"
+
+MENSAGEM_USO="
+Uso: $(basename "$0") [OPÇÕES]
+
+DESCRIÇÃO:
+	Instala e gerência os programas instalado pelo código fonte.
+
+Argumentos:
+	-i <nome.ext> <caminho>  Instala o programa.
+	-h                       Mostra esta tela de ajuda e sai.
+	-l     	                 Lista todos os programas instalados.
+	-s   <nome>	         Pesquisa os programa instalado.
+  	-u   <nome>              Desinstala o programa.
+	-w      	         Exibe os caminhos dos programas instalados.
+	-v                       Mostra a versão do programa e sai.
+
+OBSERVAÇÕES:
+	Os argumentos -i necessitam que sejam expresso o 
+	nome do arquivo junto com a extensão do arquivo, além 
+	do caminho onde está localizado o arquivo.
+
+	USO: 
+	installsrc -i  leafpad-0.8.17.tar.gz /home/mac/Downloads/
+
+	Os argumentos -u necessitam que sejam expresso o 
+	nome do arquivo. 
+
+	USO: 
+	installsrc -u leafpad
+"
+
+
+arq_caminho="		     ###################
+#
+# Autor: Mac Brener - Skylen
+# Local: /home/.programasrc/logs
+# Data: `date`
+#
+# DESCRIÇÃO:
+#	Arquivo para registro dos caminhos dos programas
+# 	instalados. Utilizado para a desinstalação e outros
+# 	funcionalidades do installsrc.
+#
+#
+		     ###################
+#
+#			<CAMINHO>
+#
+"
+
+arq_programas="		     ###################
+#
+# Autor: Mac Brener - Skylen
+# Local: /home/.programasrc/logs
+# Data: `date`
+#
+# DESCRIÇÃO:
+#	Arquivo para registro dos nomes dos programas
+# 	instalados. Utilizado para a desinstalação e outros
+# 	funcionalidades do installsrc.
+#
+#
+		     ###################
+#
+#		<NOME>
+#
+"
+
+if [ -e /home/.programasrc/logs/programas.log ]; then
+	linha=$(cat /home/.programasrc/logs/programas.log | sed -n '18, 18p')
+fi
+
+# Variáveis para a verificação.
+Configure=configure
+makefl=Mekefile
+
+# DECLARAÇÃO: Funções.
+
+# Desinstala o programa, (prefixo: -u <nome_do_programa>).
+desinstalar(){
+
+# Variáveis para a desinstalação.
+
+#Pega o nome do programa no arquivo caminho.log.
+programa=$(grep "${arquivo}" /home/.programasrc/logs/caminho.log | cut -d"/" -f5)
+ 
+# Caso tenha algum caminho duplicado, é selecionado somente um.
+caminho_duplicado=$(grep "${arquivo}" /home/.programasrc/logs/caminho.log | uniq -d | cut -d"/" -f5) 
+
+# Testa se a variável caminho arquivo está vazio.
+if test -z "${caminho_duplicado}"; then
+
+# É executado a desinstalação.
+	if [ -d "/home/.programasrc/programas/${programa}" ]; then
+		cd  /home/.programasrc/programas/"${programa}" 
+		make uninstall && make clean
+		echo
+		echo -e  "Programa desinstalado com sucesso!!"
+		sleep 1.3
+		clear 
+   exit 0
+
+         else
+
+# Erro 001: Programa não encontrado.
+# Solução: Verificar a variável programa.
+		echo -e  "Programa não encontrado."
+   exit 1
+fi
+
+	 else
+# Erro 002: Desinstalação impossível.
+# Solução: Variável caminho_duplicado vazia.
+# Verificar o arquivo caminho.log.
+	    echo
+	    echo "Não foi possível desinstalar o programa."
+	    sleep 0.8
+   exit 0
+fi
+}
+
+# Instala o programa, (prefixo: -i <nome_do_programa> <caminho>).
+instalar() {
+
+# Verifica se o arquivo configure existe.
+if [ -e "/home/.programasrc/programas/${nome_arquivo}/${Configure}" ]; then
+	./configure && make && make clean && make install 
+	echo
+	echo "Trabalho Concluido!!!!!" 
+	sleep 1.7
+    	clear 
+   exit 0
+
+# Verifica se o arquivo Makefile existe.
+elif [ -e "/home/.programasrc/programas/${nome_arquivo}/${makefl}" ]; then
+	make && make clean && make install
+	echo
+	echo "Trabalho Concluido!!!!!"  
+	sleep 1.7
+   exit 0
+
+         else
+# Erro 003: Arquivos para instalação inexistentes.
+# Solução: Abra a pasta do programa e verifique as orientações
+# no arquivo INSTALL ou REDME. Em seguida faça a instalação manualmente. 
+	     echo "Arquivos Makefile e configure inexinstentes."
+	     echo "Operação cancelada."
+   exit 1
+fi
+}
+
+# Verifica a existência dos arquivos Makefile e configure.
+verificar_arquivos(){
+
+# Variável para a identificação do programa instalado.
+nome="#####################################################
+
+	  PROGRAMA: ${nome_arquivo}
+	  DATA: `date`
+"
+# Registros.
+	cd /home/.programasrc/programas/"${nome_arquivo}" 
+	echo "${nome}" >> /home/.programasrc/logs/programas.log
+	echo "${PFONTE}/${nome_arquivo}" >> /home/.programasrc/logs/caminho.log
+	clear
+
+# Verifica se o arquivo configure existe.
+if [ -e "configure" ]; then
+	sleep 0.8
+	instalar
+
+# Verifica se o arquivo Makefile existe.
+elif [ -e "Makefile" ]; then
+	sleep 0.8
+	instalar	
+
+         else     
+# Erro 003: Arquivos para instalação inexistentes.
+# Solução: Abra a pasta do programa e verifique as orientações
+# no arquivo INSTALL ou REDME. Em seguida faça a instalação manualmente. 
+	     echo "Arquivos Makefile e configure inexinstentes."
+	     echo "Operação cancelada."
+   exit 1									
+fi
+}
+
+# Extrai o programa comprimido.
+extrair(){
+#
+# TODO: Descompactação de .tar e .zip apresentou conflito com os
+# comandos tar e zip.
+#
+# Distribuição testada: Debian 10.  
+#
+
+cd /home/.programasrc/fontes
+
+# Variáveis para a extração.
+extensao=$(echo ${arquivo}|rev|cut -d'.' -f1,2|rev)
+nome_arquivo=$(echo ${arquivo}|rev|cut -d'.' -f1,2 --complement|rev)
+
+# Verifica qual extensão é o arquivo.
+if [ "${extensao}" == "tar.gz" ]; then	
+		tar -xzvf ${arquivo} -C /home/.programasrc/programas
+		rm ${arquivo}
+		echo
+		echo "Extração concluida!!!"
+		sleep 1
+	verificar_arquivos
+
+elif [ "${extensao}" == "tgz" ]; then	
+		tar -xzvf ${arquivo} -C /home/.programasrc/programas
+		rm ${arquivo}
+		echo
+		echo "Extração concluida!!!"
+		sleep 1
+	verificar_arquivos
+
+elif [ "${extensao}" == "tar.bz" ]; then
+		tar -xjvf ${arquivo} -C /home/.programasrc/programas
+		rm ${arquivo}
+		echo
+		echo "Extração concluida!!!"
+		sleep 1
+	verificar_arquivos
+
+elif [ "${extensao}" == "tar.bz2" ]; then
+		tar -jxvf ${arquivo} -C /home/.programasrc/programas
+		rm ${arquivo}
+		echo
+		echo "Extração concluida!!!"
+		sleep 1
+	verificar_arquivos
+
+elif [ "${extensao}" == "tar.xz" ]; then
+		tar -xJvf ${arquivo} -C /home/.programasrc/programas
+		rm ${arquivo}
+		echo
+		echo "Extração concluida!!!"
+		sleep 1
+	verificar_arquivos
+
+	else 
+# Erro 004: Não foi identificado a extensão do arquivo.
+# Solução: Caso o arquivo seja .tar, .zip ou .rar. 
+# Faça a descompactação manualmente, assim como a instalação.
+		echo "Não foi possovel extrair o programa."
+		echo
+    exit 1
+fi
+}
+
+# Copia o arquivo para a extração.
+copiar_arquivo(){
+
+if ! [ -e ${PFONTE}/${arquivo} ]; then
+	cp -r ${local}/${arquivo} /home/.programasrc/fontes
+	extrair
+fi
+}
+
+# Função verifica a inexistência das pastas e arquivos.
+verificar_dados(){
+
+# As três próximas condições verifica as pastas.
+if [ ! -d "/home/.programasrc" ]; then
+	echo "Criando a pasta: programasrc"
+	sleep 0.7
+	mkdir -m 775 /home/.programasrc
+fi
+
+if [ ! -d "/home/.programasrc/programas" ]; then
+	echo "Criando a pasta: programas"
+	sleep 0.6
+	mkdir -m 775 /home/.programasrc/programas
+fi
+
+if [ ! -d "/home/.programasrc/fontes" ]; then
+	echo "Criando a pasta: fontes"
+	sleep 0.6
+	mkdir -m 775 /home/.programasrc/fontes
+fi
+
+# As três próximas condições verifica os arquivos.
+if [ ! -d  "/home/.programasrc/logs" ]; then
+	echo "Criando a pasta: logs"
+	sleep 0.6
+	mkdir -m 775 /home/.programasrc/logs
+fi
+
+if [ ! -e  "/home/.programasrc/logs/programas.log" ]; then
+	echo "Criando a arquivo: programas.log"
+	sleep 0.7
+	echo "${arq_programas}" >> /home/.programasrc/logs/programas.log
+fi
+
+if [ ! -e  "/home/.programasrc/logs/caminho.log" ]; then
+	echo "Criando a arquivo: caminho.log"
+	echo "${arq_caminho}" >> /home/.programasrc/logs/caminho.log
+	sleep 0.7
+fi
+
+
+copiar_arquivo
+}
+
+		     ###################
+
+
+# Verifica se o root está logado no sistema.
+if [ $(whoami) != 'root' ]; then 
+	echo "Usuário root não está logado."
+	echo "Saindo..."
+   exit 1
+fi
+
+
+# Chama a ajuda. 
+if test -z "$1"; then
+	echo "${MENSAGEM_USO}"
+	exit 0 
+
+else	
+
+
+while ! test -z "$1"
+do
+# Verifica os argumentos.
+	case "$1" in
+
+		-i)
+		if test -z "$2"; then
+			echo "Faltam argumentos."
+			echo
+		    exit 1
+		fi
+
+		if test -z "$3"; then
+			echo "Faltam argumentos."
+			echo
+		    exit 1
+
+		    else  
+			verificar_dados
+		fi
+	;;
+
+		-h) 
+		echo "${MENSAGEM_USO}"
+		exit 0 
+	;;
+		
+		-l)
+		if [ -z ${linha} ]; then
+		# Erro 005: Nenhum programa instalado. 
+		# Solução: Verificar linha 18 do arquivo programa.log
+			echo "Nenhum programa instalado."
+			echo
+		    exit 1
+
+		   else
+		      clear
+		      cat /home/.programasrc/logs/programas.log
+		      echo
+		    exit 0 
+		fi
+	;;
+		
+		-s)
+		if test -z "$2"; then
+			echo "Faltam argumentos."
+			echo
+		    exit 1
+		fi
+
+		if [ -z ${linha} ]; then
+		# Erro 005: Nenhum programa instalado. 
+		# Solução: Verificar linha 18 do arquivo programa.log.
+			echo "Nenhum programa instalado."
+			echo
+		    exit 0
+
+		    else
+		      if ! grep "$2" /home/.programasrc/logs/programas.log; then
+			# Erro 006: Programa não encontrado. 
+			# Solução: Verifique a digitação do nome do programa. 
+	      			echo "Programa não encontrado."
+				echo
+		    exit 1 
+
+			 else
+			    clear
+			    grep "$2" /home/.programasrc/logs/programas.log
+			    echo 
+		    exit 0
+		  fi
+		fi
+	;;
+
+		-u)
+		if test -z "$2"; then
+			echo "Faltam argumentos."
+			echo
+		    exit 1
+
+		  else
+	   	     desinstalar
+
+		fi
+	;;
+
+		-w)
+		# Erro 005: Nenhum programa instalado. 
+		# Solução: Verificar linha 18 do arquivo programa.log.
+		if [ -z ${linha} ]; then
+			echo "Nenhum programa instalado."
+			echo
+		    exit 1
+
+		    else 
+		  	clear
+			cat /home/.programasrc/logs/caminho.log | uniq
+			echo
+		    exit 0 
+		fi 
+	;;
+
+		-v)
+		echo "Versão 1.0"
+		exit 0
+	;;
+
+		*)
+		echo Opção inválida: "$1"
+		exit 1
+	;;
+
+	esac
+   done
+fi
+	
